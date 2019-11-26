@@ -1,0 +1,26 @@
+{
+  "name": "figma2miro-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index",
+    "dev": "ts-node-dev --respawn index.ts",
+    "lint": "tslint -p . -c tslint.json -t stylish",
+    "ngrok": "./node_modules/ngrok/bin/ngrok http 5000"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.19.0",
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.2",
+    "ngrok": "^3.2.5",
+    "ts-node-dev": "^1.0.0-pre.44",
+    "tslint": "^5.20.1",
+    "typescript": "^3.7.2"
+  }
+}

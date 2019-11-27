@@ -20,8 +20,6 @@ class Storage {
 
   async set(key: string, value: any): Promise<void> {
     try {
-      const isStorageExists = await fs.pathExists(this.storagePath);
-      if (!isStorageExists) await fs.outputJson(this.storagePath, {});
       const json = await this.getAll();
       await fs.writeJson(this.storagePath, {
         ...json,
@@ -34,9 +32,19 @@ class Storage {
 
   private async getAll(): Promise<any> {
     try {
+      await this.ensureExists();
       return await fs.readJson(this.storagePath);
     } catch (error) {
       throw new Error('Error while reading from storage!');
+    }
+  }
+
+  private async ensureExists(): Promise<void> {
+    try {
+      const isStorageExists = await fs.pathExists(this.storagePath);
+      if (!isStorageExists) await fs.outputJson(this.storagePath, {});
+    } catch (error) {
+      throw new Error('Error while ensuring storage existence!');
     }
   }
 }

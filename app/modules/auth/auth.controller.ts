@@ -29,7 +29,7 @@ export const authController: IController = {
     }
 
     type CheckAuthQueryBody = {
-      state: string;
+      state?: string;
     };
     ctx.get('/check', checkAuth);
     async function checkAuth(req: Request, res: Response): Promise<void> {
@@ -37,14 +37,16 @@ export const authController: IController = {
         const {state} = req.query as CheckAuthQueryBody;
         if (!state) {
           res.status(BAD_REQUEST).json(new AppError('Need stateValue in query!'));
+          return;
         }
         const authInfo = await getAuthInfoFromStorage(state);
         if (!authInfo) {
           res.status(UNAUTHORIZED).json(new CheckAuthDto(false));
+          return;
         }
         res.status(OK).json(new CheckAuthDto(true));
       } catch (error) {
-        res.status(INTERNAL_SERVER_ERROR).send(error.message);
+        res.status(INTERNAL_SERVER_ERROR).json(new AppError(error.message));
       }
     }
 

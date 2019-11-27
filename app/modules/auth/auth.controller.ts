@@ -1,7 +1,10 @@
 import {Request, Response, Router} from 'express';
+import {UNAUTHORIZED, OK, BAD_REQUEST, INTERNAL_SERVER_ERROR} from 'http-status-codes';
 import {IController} from 'utils/Controller';
-import {getAuthInfoFromAPI, saveAuthInfoToStorage} from './auth.service';
+import {AppError} from 'utils/AppError';
+import {getAuthInfoFromAPI, getAuthInfoFromStorage, saveAuthInfoToStorage} from './auth.service';
 import {AUTH_ROOT} from './auth.meta';
+import {CheckAuthDto} from './auth.dto';
 
 export const authController: IController = {
   root: AUTH_ROOT,
@@ -21,7 +24,27 @@ export const authController: IController = {
         await saveAuthInfoToStorage(state, authInfo);
         res.send('SUCCESS!');
       } catch (error) {
-        res.send(error.message);
+        res.status(INTERNAL_SERVER_ERROR).send(error.message);
+      }
+    }
+
+    type CheckAuthQueryBody = {
+      state: string;
+    };
+    ctx.get('/check', checkAuth);
+    async function checkAuth(req: Request, res: Response): Promise<void> {
+      try {
+        const {state} = req.query as CheckAuthQueryBody;
+        if (!state) {
+          res.status(BAD_REQUEST).json(new AppError('Need stateValue in query!'));
+        }
+        const authInfo = await getAuthInfoFromStorage(state);
+        if (!authInfo) {
+          res.status(UNAUTHORIZED).json(new CheckAuthDto(false));
+        }
+        res.status(OK).json(new CheckAuthDto(true));
+      } catch (error) {
+        res.status(INTERNAL_SERVER_ERROR).send(error.message);
       }
     }
 

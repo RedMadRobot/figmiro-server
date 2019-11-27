@@ -43,7 +43,7 @@ export async function saveAuthInfoToStorage(state: string, authInfo: AuthInfo): 
   }
 }
 
-export async function getAuthInfoFromStorage(state: string): Promise<AuthInfo> {
+export async function getAuthInfoFromStorage(state: string): Promise<AuthInfo | undefined> {
   try {
     return storage.get<AuthInfo>(state);
   } catch (error) {

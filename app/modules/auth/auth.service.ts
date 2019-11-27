@@ -35,9 +35,9 @@ export async function getAuthInfoFromAPI(code: string, clientId: string): Promis
   }
 }
 
-export async function saveAuthInfoToStorage(authInfo: AuthInfo): Promise<void> {
+export async function saveAuthInfoToStorage(state: string, authInfo: AuthInfo): Promise<void> {
   try {
-    await storage.set(authInfo.userId, authInfo);
+    await storage.set(state, authInfo);
   } catch (error) {
     throw error;
   }

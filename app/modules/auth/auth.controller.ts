@@ -11,13 +11,14 @@ export const authController: IController = {
     type ProcessInstallationQueryBody = {
       code: string;
       client_id: string;
+      state: string;
     };
     ctx.get('/', processInstallation);
     async function processInstallation(req: Request, res: Response): Promise<void> {
       try {
-        const {code, client_id} = req.query as ProcessInstallationQueryBody;
+        const {code, client_id, state} = req.query as ProcessInstallationQueryBody;
         const authInfo = await getAuthInfoFromAPI(code, client_id);
-        await saveAuthInfoToStorage(authInfo);
+        await saveAuthInfoToStorage(state, authInfo);
         res.send('SUCCESS!');
       } catch (error) {
         res.send(error.message);

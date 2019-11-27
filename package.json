@@ -5,11 +5,12 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index",
+    "start": "node dist",
+    "dev": "concurrently --kill-others \"tsc -w\" \"nodemon dist\"",
     "lint": "tslint -p . -c tslint.json -t stylish",
     "ngrok": "./node_modules/ngrok/bin/ngrok http 5000"
   },
-  "author": "",
+  "author": "RMR MSK",
   "license": "ISC",
   "dependencies": {
     "axios": "^0.19.0",

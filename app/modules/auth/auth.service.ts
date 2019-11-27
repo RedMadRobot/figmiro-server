@@ -43,9 +43,9 @@ export async function saveAuthInfoToStorage(state: string, authInfo: AuthInfo): 
   }
 }
 
-export async function getAuthInfoFromStorage(userId: string): Promise<AuthInfo> {
+export async function getAuthInfoFromStorage(state: string): Promise<AuthInfo> {
   try {
-    return storage.get<AuthInfo>(userId);
+    return storage.get<AuthInfo>(state);
   } catch (error) {
     throw error;
   }

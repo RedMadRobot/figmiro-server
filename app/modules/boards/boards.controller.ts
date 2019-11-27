@@ -8,10 +8,14 @@ export const boardsController: IController = {
   ctx: (() => {
     const ctx = Router();
 
+    type FindAllQueryBody = {
+      state: string;
+    };
     ctx.get('/', findAll);
-    async function findAll(_: Request, res: Response): Promise<void> {
+    async function findAll(req: Request, res: Response): Promise<void> {
       try {
-        const authInfo = await getAuthInfoFromStorage('wdwqd');
+        const {state} = req.query as FindAllQueryBody;
+        const authInfo = await getAuthInfoFromStorage(state);
         const boards = await getAll(authInfo);
         res.send(boards);
       } catch (error) {

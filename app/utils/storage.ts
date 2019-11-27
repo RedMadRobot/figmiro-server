@@ -9,24 +9,16 @@ class Storage {
     this.storagePath = path.resolve(pathToStorage);
   }
 
-  async get(key: string): Promise<any> {
+  async get<T>(key: string): Promise<T> {
     try {
       const json = await this.getAll();
       return json[key];
     } catch (error) {
-      throw error;
+      throw new Error('Error while reading from storage!');
     }
   }
 
-  async getAll(): Promise<any> {
-    try {
-      return await fs.readJson(this.storagePath);
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async set(key: string, value: string): Promise<void> {
+  async set(key: string, value: any): Promise<void> {
     try {
       const isStorageExists = await fs.pathExists(this.storagePath);
       if (!isStorageExists) await fs.outputJson(this.storagePath, {});
@@ -36,7 +28,15 @@ class Storage {
         [key]: value
       });
     } catch (error) {
-      throw error;
+      throw new Error('Error while saving to storage!');
+    }
+  }
+
+  private async getAll(): Promise<any> {
+    try {
+      return await fs.readJson(this.storagePath);
+    } catch (error) {
+      throw new Error('Error while reading from storage!');
     }
   }
 }

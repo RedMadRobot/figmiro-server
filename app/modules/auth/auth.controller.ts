@@ -1,6 +1,6 @@
 import {Request, Response, Router} from 'express';
 import {IController} from 'utils/Controller';
-import {getAuthInfo} from './auth.service';
+import {getAuthInfoFromAPI, saveAuthInfoToStorage} from './auth.service';
 import {AUTH_ROOT} from './auth.meta';
 
 export const authController: IController = {
@@ -16,10 +16,11 @@ export const authController: IController = {
     async function processInstallation(req: Request, res: Response): Promise<void> {
       try {
         const {code, client_id} = req.query as ProcessInstallationQueryBody;
-        const authInfo = await getAuthInfo(code, client_id);
-        res.send(authInfo);
+        const authInfo = await getAuthInfoFromAPI(code, client_id);
+        await saveAuthInfoToStorage(authInfo);
+        res.send('SUCCESS!');
       } catch (error) {
-        res.send(error);
+        res.send(error.message);
       }
     }
 

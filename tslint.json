@@ -8,6 +8,7 @@
     "rules": {
         "no-any": true,
         "interface-name": false,
+        "interface-over-type-literal": false,
         "no-inferrable-types": true,
         "no-magic-numbers": false,
         "no-non-null-assertion": true,
@@ -43,7 +44,7 @@
         "no-mergeable-namespace": true,
         "no-require-imports": true,
         "curly": [true, "ignore-same-line"],
-        "array-type": [true, "generic"],
+        "array-type": [true, "array"],
         "indent": [true, "spaces", 2],
         "arrow-parens": [true, "ban-single-arg-parens"],
         "arrow-return-shorthand": [true, "multiline"],

@@ -18,6 +18,12 @@
     "strictFunctionTypes": true,
     "strictPropertyInitialization": true,
     "strictNullChecks": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "baseUrl": "./app",
+    "paths": {
+      "utils/*": ["utils/*"],
+      "modules/*": ["modules/*"],
+      "config": ["config.ts"]
+    }
   }
 }

@@ -1,6 +1,6 @@
 import {Router} from 'express';
 
-export interface IController {
+export interface Controller {
   root: string;
   ctx: Router;
 }

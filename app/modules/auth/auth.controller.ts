@@ -1,12 +1,12 @@
 import {Request, Response, Router} from 'express';
 import {UNAUTHORIZED, OK, BAD_REQUEST, INTERNAL_SERVER_ERROR} from 'http-status-codes';
-import {IController} from 'utils/Controller';
+import {Controller} from 'utils/Controller';
 import {AppError} from 'utils/AppError';
 import {getAuthInfoFromAPI, getAuthInfoFromStorage, saveAuthInfoToStorage} from './auth.service';
 import {AUTH_ROOT} from './auth.meta';
 import {CheckAuthDto} from './auth.dto';
 
-export const authController: IController = {
+export const authController: Controller = {
   root: AUTH_ROOT,
   ctx: (() => {
     const ctx = Router();

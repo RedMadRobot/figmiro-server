@@ -1,11 +1,11 @@
 import {Request, Response, Router} from 'express';
 import {BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR, OK} from 'http-status-codes';
 import {AppError} from 'utils/AppError';
-import {IController} from 'utils/Controller';
+import {Controller} from 'utils/Controller';
 import {getAuthInfoFromStorage} from 'modules/auth';
 import {getAll} from './boards.service';
 
-export const boardsController: IController = {
+export const boardsController: Controller = {
   root: '/boards',
   ctx: (() => {
     const ctx = Router();

@@ -5,5 +5,5 @@ export type CreateOrUpdatePicturesDTO = {
 
 export type CreateOrUpdatePictureDTO = {
   boardId: string,
-  image: string
+  imagePath: string
 };

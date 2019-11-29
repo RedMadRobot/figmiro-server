@@ -3,6 +3,7 @@ import {storage} from 'utils/storage';
 import {CLIENT_SECRET, BASE_URL} from 'config';
 import {AUTH_ROOT} from './auth.meta';
 import {AuthInfo} from './auth.entity';
+import {SignInDTO} from './auth.dto';
 
 type GetAuthInfoResponse = {
   access_token: string;
@@ -49,4 +50,9 @@ export async function getAuthInfoFromStorage(state: string): Promise<AuthInfo | 
   } catch (error) {
     throw error;
   }
+}
+
+export async function signIn(dto: SignInDTO) {
+  const response = await request.post('/auth', dto);
+  console.log(response);
 }

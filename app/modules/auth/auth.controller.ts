@@ -1,32 +1,50 @@
 import {Request, Response, Router} from 'express';
 import {UNAUTHORIZED, OK, BAD_REQUEST, INTERNAL_SERVER_ERROR} from 'http-status-codes';
 import {Controller} from 'utils/Controller';
+import {RequestWithBody} from 'utils/RequestWithBody';
 import {AppError} from 'utils/AppError';
-import {getAuthInfoFromAPI, getAuthInfoFromStorage, saveAuthInfoToStorage} from './auth.service';
-import {AUTH_ROOT} from './auth.meta';
-import {CheckAuthDto} from './auth.dto';
+import {signIn, getAuthInfoFromAPI, getAuthInfoFromStorage, saveAuthInfoToStorage} from './auth.service';
+import {CheckAuthDto, SignInDTO} from './auth.dto';
 
 export const authController: Controller = {
-  root: AUTH_ROOT,
+  root: '/auth',
   ctx: (() => {
     const ctx = Router();
 
-    type ProcessInstallationQueryBody = {
-      code: string;
-      client_id: string;
-      state: string;
-    };
-    ctx.get('/', processInstallation);
-    async function processInstallation(req: Request, res: Response): Promise<void> {
+    ctx.post('/', processSignIn);
+    async function processSignIn(req: RequestWithBody<SignInDTO>, res: Response): Promise<void> {
       try {
-        const {code, client_id, state} = req.query as ProcessInstallationQueryBody;
-        const authInfo = await getAuthInfoFromAPI(code, client_id);
-        await saveAuthInfoToStorage(state, authInfo);
-        res.send('SUCCESS!');
+        if (!req.body.email) {
+          res.status(BAD_REQUEST).json(new AppError('SIGNIN_NEED_EMAIL'));
+          return;
+        }
+        if (!req.body.password) {
+          res.status(BAD_REQUEST).json(new AppError('SIGNIN_NEED_PASSWORD'));
+          return;
+        }
+        await signIn(req.body);
+        res.status(OK).end();
       } catch (error) {
-        res.status(INTERNAL_SERVER_ERROR).send(error.message);
+        res.status(INTERNAL_SERVER_ERROR).json(error);
       }
     }
+
+    // type ProcessInstallationQueryBody = {
+    //   code: string;
+    //   client_id: string;
+    //   state: string;
+    // };
+    // ctx.get('/', processInstallation);
+    // async function processInstallation(req: Request, res: Response): Promise<void> {
+    //   try {
+    //     const {code, client_id, state} = req.query as ProcessInstallationQueryBody;
+    //     const authInfo = await getAuthInfoFromAPI(code, client_id);
+    //     await saveAuthInfoToStorage(state, authInfo);
+    //     res.send('SUCCESS!');
+    //   } catch (error) {
+    //     res.status(INTERNAL_SERVER_ERROR).send(error.message);
+    //   }
+    // }
 
     type CheckAuthQueryBody = {
       state?: string;

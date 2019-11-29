@@ -3,3 +3,8 @@ export class CheckAuthDto {
     readonly isAuthorized: boolean
   ) {}
 }
+
+export type SignInDTO = {
+  email: string;
+  password: string;
+};

@@ -1,5 +1,5 @@
 export class AppError {
   constructor(
-    public readonly status: string
+    public readonly reason: string
   ) {}
 }

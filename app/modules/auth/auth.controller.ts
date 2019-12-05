@@ -1,9 +1,9 @@
-import {Response, Router} from 'express';
-import {OK, INTERNAL_SERVER_ERROR, getStatusText} from 'http-status-codes';
+import {Request, Response, Router} from 'express';
+import {OK} from 'http-status-codes';
 import {Controller} from 'utils/Controller';
 import {RequestWithBody} from 'utils/RequestWithBody';
-import {AppError} from 'utils/AppError';
-import {signIn} from './auth.service';
+import {processError, checkUnauthorized} from 'utils/AppError';
+import {signIn, logout} from './auth.service';
 import {SignInDTO} from './auth.dto';
 
 export const authController: Controller = {
@@ -17,14 +17,21 @@ export const authController: Controller = {
         const response = await signIn(req.body);
         res.status(OK).json(response);
       } catch (error) {
-        if (error.code) {
-          res.status(error.code).json(error);
-          return;
-        }
-        const appError = new AppError(getStatusText(INTERNAL_SERVER_ERROR));
-        res.status(INTERNAL_SERVER_ERROR).json(appError);
+        processError(error, res);
       }
     }
+
+    ctx.post('/logout', processLogout);
+    async function processLogout(req: Request, res: Response): Promise<void> {
+      try {
+        checkUnauthorized(req);
+        await logout(req);
+        res.status(OK).send();
+      } catch (error) {
+        processError(error, res);
+      }
+    }
+
     return ctx;
   })()
 };

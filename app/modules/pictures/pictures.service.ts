@@ -17,15 +17,15 @@ export async function createOrUpdatePictures(dto: CreateOrUpdatePicturesDTO): Pr
 export async function createOrUpdatePicture(dto: CreateOrUpdatePictureDTO): Promise<void> {
   try {
     const formData = new FormData();
-    const data = {
-      data: [
-        {
-          id: '1234',
-          type: 'ImageWidget',
-          json: '{}'
-        }
-      ]
-    };
+    // const data = {
+    //   data: [
+    //     {
+    //       id: '1234',
+    //       type: 'ImageWidget',
+    //       json: '{}'
+    //     }
+    //   ]
+    // };
     formData.append('GraphicsPluginRequest', '{"data":[{"id": "3074457345676563085","type": "ImageWidget","json": "{}"}]}', {contentType: 'application/json'});
     formData.append('ArtboardName1', fs.createReadStream(dto.imagePath));
     const response = await request.post(
@@ -47,7 +47,6 @@ export async function createOrUpdatePicture(dto: CreateOrUpdatePictureDTO): Prom
   }
 }
 
-const exportPath = path.resolve();
 async function transformImages(images: string): Promise<string[]> {
   const base64images = pipe([
     JSON.parse,
@@ -63,10 +62,3 @@ async function transformImages(images: string): Promise<string[]> {
     })
   );
 }
-
-// curl -v POST \
-//   --header 'Content-Type: multipart/form-data' \
-//   --header 'Authorization: hash q5HQmoqyRLUiNMOA1gpiEyF1dCZTOS0WM8JLsp45u4hWXFAyd8MRMyGVoMHukeIJ' \
-//   -F 'GraphicsPluginRequest={"data":[{"id": "3074457345676563085","type": "ImageWidget","json": "{}"}]};type=application/json' \
-//   -F 'ArtboardName1=@/Users/i.krupnov/Desktop/WRK/figma2miro-server/tmp/artboard_0.png' \
-//   https://miro.com/api/v1/boards/o9J_kvjP1kA=/integrations/imageplugin

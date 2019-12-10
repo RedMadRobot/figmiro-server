@@ -1,5 +1,5 @@
 import {Request, Response, Router} from 'express';
-import {INTERNAL_SERVER_ERROR, OK} from 'http-status-codes';
+import {OK} from 'http-status-codes';
 import {Controller} from 'utils/Controller';
 import {createOrUpdatePictures} from './pictures.service';
 

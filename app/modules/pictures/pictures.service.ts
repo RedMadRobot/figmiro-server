@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+import uuid from 'uuid/v1';
 import path from 'path';
 import FormData from 'form-data';
 import {request} from 'utils/request';
@@ -44,7 +45,8 @@ export async function createOrUpdatePictures(
 async function saveImagesToTmp(images: string[], boardId: string): Promise<string[]> {
   return Promise.all(
     images.map(async (image: string, index: number) => {
-      const fullPath = path.resolve('./tmp', `artboard_${boardId}_${index}.png`);
+      const fileName = `artboard_${boardId}_${uuid()}_${index}.png`;
+      const fullPath = path.resolve('./tmp', fileName);
       await fs.outputFile(fullPath, image, 'base64');
       return fullPath;
     })

@@ -3,51 +3,41 @@ import path from 'path';
 import FormData from 'form-data';
 import {request} from 'utils/request';
 import {pipe} from 'utils/pipe';
-import {CreateOrUpdatePictureDTO, CreateOrUpdatePicturesDTO} from './pictures.dto';
+import {RequestWithBody} from 'utils/RequestWithBody';
+import {CreateOrUpdatePicturesDTO} from './pictures.dto';
 
-export async function createOrUpdatePictures(dto: CreateOrUpdatePicturesDTO): Promise<void> {
-  const images = transformImagesToBase64(dto.images);
+export async function createOrUpdatePictures(
+  req: RequestWithBody<CreateOrUpdatePicturesDTO>
+): Promise<void> {
+  const images = transformImagesToBase64(req.body.images);
   const imagesPaths = await saveImagesToTmp(images);
-  try {
-    await Promise.all(
-      imagesPaths.map(
-        imagePath => createOrUpdatePicture({boardId: dto.boardId, imagePath})
-      )
-    );
-  } finally {
-    await removeImagesFromTmp(imagesPaths);
-  }
-}
-
-export async function createOrUpdatePicture(dto: CreateOrUpdatePictureDTO): Promise<void> {
   try {
     const formData = new FormData();
     const data = {
-      data: [
-        {
-          id: '3074457345676563185',
-          type: 'ImageWidget',
-          json: '{}'
-        }
-      ]
+      data: imagesPaths.map((_, index) => ({
+        id: `307445734567656418${index}`,
+        type: 'ImageWidget',
+        json: '{}'
+      }))
     };
     formData.append('GraphicsPluginRequest', JSON.stringify(data), {contentType: 'application/json'});
-    formData.append('ArtboardName1', fs.createReadStream(dto.imagePath));
+    imagesPaths.forEach(imagePath => {
+      formData.append('ArtboardName1', fs.createReadStream(imagePath));
+    });
     await request.post(
-      `/boards/${dto.boardId}/integrations/imageplugin`,
+      `/boards/${req.body.boardId}/integrations/imageplugin`,
       formData,
       {
-      headers: {
-        Authorization: `hash rCLZjcYe4pKwGqr9wMU0wlRCNf1oLy3f5XfSeNQUElur5E3w1qK9e8oC9lr2ldDE`,
-        ...formData.getHeaders()
+        headers: {
+          Authorization: req.headers.authorization,
+          ...formData.getHeaders()
+        }
       }
-    });
-  } catch (e) {
-    if (e.response) {
-      console.log(e.response);
-      return;
-    }
-    console.log(e);
+    );
+  } catch (error) {
+    console.log(error.response.data.error);
+  } finally {
+    await removeImagesFromTmp(imagesPaths);
   }
 }
 

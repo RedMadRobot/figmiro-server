@@ -10,12 +10,12 @@ export async function createOrUpdatePictures(
   req: RequestWithBody<CreateOrUpdatePicturesDTO>
 ): Promise<void> {
   const images = transformImagesToBase64(req.body.images);
-  const imagesPaths = await saveImagesToTmp(images);
+  const imagesPaths = await saveImagesToTmp(images, req.body.boardId);
   try {
     const formData = new FormData();
     const data = {
       data: imagesPaths.map((_, index) => ({
-        id: `307445734567656418${index}`,
+        id: createImageId(index),
         type: 'ImageWidget',
         json: '{}'
       }))
@@ -41,10 +41,10 @@ export async function createOrUpdatePictures(
   }
 }
 
-async function saveImagesToTmp(images: string[]): Promise<string[]> {
+async function saveImagesToTmp(images: string[], boardId: string): Promise<string[]> {
   return Promise.all(
     images.map(async (image: string, index: number) => {
-      const fullPath = path.resolve('./tmp', `artboard_${index}.png`);
+      const fullPath = path.resolve('./tmp', `artboard_${boardId}_${index}.png`);
       await fs.outputFile(fullPath, image, 'base64');
       return fullPath;
     })
@@ -66,4 +66,15 @@ function transformImagesToBase64(images: string): string[] {
     (data: number[][]) => data.map(Buffer.from),
     (data: Buffer[]) => data.map(buffer => buffer.toString('base64'))
   ])(images);
+}
+
+// TODO: do smth with it
+function createImageId(index: number): string {
+  const indexString = `${index}`;
+  const MAX_IMAGES = 1000000;
+  const idPart = `${MAX_IMAGES}${indexString}`
+    .split('')
+    .splice(indexString.length)
+    .join('');
+  return `307445734567${idPart}`;
 }

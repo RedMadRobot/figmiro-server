@@ -1,6 +1,7 @@
 import {Request, Response, Router} from 'express';
 import {OK} from 'http-status-codes';
 import {Controller} from 'utils/Controller';
+import {checkUnauthorized, processError} from 'utils/AppError';
 import {createOrUpdatePictures} from './pictures.service';
 
 export const picturesController: Controller = {
@@ -10,12 +11,13 @@ export const picturesController: Controller = {
 
     ctx.post('/', processCreateOrUpdatePicture);
     async function processCreateOrUpdatePicture(req: Request, res: Response): Promise<void> {
-      // try {
+      try {
+        checkUnauthorized(req);
         await createOrUpdatePictures(req.body);
         res.status(OK).send();
-      // } catch (error) {
-      //   res.status(INTERNAL_SERVER_ERROR).json(error);
-      // }
+      } catch (error) {
+        processError(error, res);
+      }
     }
     return ctx;
   })()

@@ -6,29 +6,34 @@ import {pipe} from 'utils/pipe';
 import {CreateOrUpdatePictureDTO, CreateOrUpdatePicturesDTO} from './pictures.dto';
 
 export async function createOrUpdatePictures(dto: CreateOrUpdatePicturesDTO): Promise<void> {
-  const paths = await transformImages(dto.images);
-  await Promise.all(
-    paths.map(
-      imagePath => createOrUpdatePicture({boardId: dto.boardId, imagePath})
-    )
-  );
+  const images = transformImagesToBase64(dto.images);
+  const imagesPaths = await saveImagesToTmp(images);
+  try {
+    await Promise.all(
+      imagesPaths.map(
+        imagePath => createOrUpdatePicture({boardId: dto.boardId, imagePath})
+      )
+    );
+  } finally {
+    await removeImagesFromTmp(imagesPaths);
+  }
 }
 
 export async function createOrUpdatePicture(dto: CreateOrUpdatePictureDTO): Promise<void> {
   try {
     const formData = new FormData();
-    // const data = {
-    //   data: [
-    //     {
-    //       id: '1234',
-    //       type: 'ImageWidget',
-    //       json: '{}'
-    //     }
-    //   ]
-    // };
-    formData.append('GraphicsPluginRequest', '{"data":[{"id": "3074457345676563085","type": "ImageWidget","json": "{}"}]}', {contentType: 'application/json'});
+    const data = {
+      data: [
+        {
+          id: '3074457345676563185',
+          type: 'ImageWidget',
+          json: '{}'
+        }
+      ]
+    };
+    formData.append('GraphicsPluginRequest', JSON.stringify(data), {contentType: 'application/json'});
     formData.append('ArtboardName1', fs.createReadStream(dto.imagePath));
-    const response = await request.post(
+    await request.post(
       `/boards/${dto.boardId}/integrations/imageplugin`,
       formData,
       {
@@ -37,7 +42,6 @@ export async function createOrUpdatePicture(dto: CreateOrUpdatePictureDTO): Prom
         ...formData.getHeaders()
       }
     });
-    console.log(response);
   } catch (e) {
     if (e.response) {
       console.log(e.response);
@@ -47,18 +51,29 @@ export async function createOrUpdatePicture(dto: CreateOrUpdatePictureDTO): Prom
   }
 }
 
-async function transformImages(images: string): Promise<string[]> {
-  const base64images = pipe([
-    JSON.parse,
-    (data: object[]) => data.map(Object.values),
-    (data: number[][]) => data.map(Buffer.from),
-    (data: Buffer[]) => data.map(buffer => buffer.toString('base64'))
-  ])(images);
+async function saveImagesToTmp(images: string[]): Promise<string[]> {
   return Promise.all(
-    base64images.map(async (image: string, index: number) => {
+    images.map(async (image: string, index: number) => {
       const fullPath = path.resolve('./tmp', `artboard_${index}.png`);
       await fs.outputFile(fullPath, image, 'base64');
       return fullPath;
     })
   );
+}
+
+async function removeImagesFromTmp(imagesFromTmp: string[]): Promise<void> {
+  await Promise.all(
+    imagesFromTmp.map(async imagePath => {
+      await fs.remove(imagePath);
+    })
+  );
+}
+
+function transformImagesToBase64(images: string): string[] {
+  return pipe([
+    JSON.parse,
+    (data: object[]) => data.map(Object.values),
+    (data: number[][]) => data.map(Buffer.from),
+    (data: Buffer[]) => data.map(buffer => buffer.toString('base64'))
+  ])(images);
 }

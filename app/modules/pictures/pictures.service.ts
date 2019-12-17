@@ -1,29 +1,37 @@
 import fs from 'fs-extra';
 import uuid from 'uuid/v1';
 import path from 'path';
+import {omit, flow} from 'lodash';
 import FormData from 'form-data';
 import {request} from 'utils/request';
-import {pipe} from 'utils/pipe';
 import {RequestWithBody} from 'utils/RequestWithBody';
 import {CreateOrUpdatePicturesDTO} from './pictures.dto';
+import {PictureStringed, Picture, PictureBuffered, PictureWithProperXY} from './pictures.entity';
 
 export async function createOrUpdatePictures(
   req: RequestWithBody<CreateOrUpdatePicturesDTO>
 ): Promise<void> {
-  const images = transformImagesToBase64(req.body.images);
-  const imagesPaths = await saveImagesToTmp(images, req.body.boardId);
+  const pictures = await getPictures(req.body);
   try {
     const formData = new FormData();
     const data = {
-      data: imagesPaths.map((_, index) => ({
+      data: pictures.map((pic, index) => ({
         id: createImageId(index),
         type: 'ImageWidget',
-        json: '{}'
+        json: JSON.stringify({
+          transformationData: {
+            positionData: {
+              x: pic.x,
+              y: pic.y
+            },
+            ...(req.body.scale ? {scaleData: {scale: 0.5}} : {})
+          }
+        })
       }))
     };
     formData.append('GraphicsPluginRequest', JSON.stringify(data), {contentType: 'application/json'});
-    imagesPaths.forEach(imagePath => {
-      formData.append('ArtboardName1', fs.createReadStream(imagePath));
+    pictures.forEach(pic => {
+      formData.append('ArtboardName1', fs.createReadStream(pic.imagePath));
     });
     await request.post(
       `/boards/${req.body.boardId}/integrations/imageplugin`,
@@ -38,36 +46,50 @@ export async function createOrUpdatePictures(
   } catch (error) {
     console.log(error.response.data.error);
   } finally {
-    await removeImagesFromTmp(imagesPaths);
+    await removeImagesFromTmp(pictures);
   }
 }
 
-async function saveImagesToTmp(images: string[], boardId: string): Promise<string[]> {
-  return Promise.all(
-    images.map(async (image: string, index: number) => {
-      const fileName = `artboard_${boardId}_${uuid()}_${index}.png`;
-      const fullPath = path.resolve('./tmp', fileName);
-      await fs.outputFile(fullPath, image, 'base64');
-      return fullPath;
-    })
-  );
-}
-
-async function removeImagesFromTmp(imagesFromTmp: string[]): Promise<void> {
-  await Promise.all(
-    imagesFromTmp.map(async imagePath => {
-      await fs.remove(imagePath);
-    })
-  );
-}
-
-function transformImagesToBase64(images: string): string[] {
-  return pipe([
+async function getPictures(dto: CreateOrUpdatePicturesDTO): Promise<Picture[]> {
+  return flow(
     JSON.parse,
-    (data: object[]) => data.map(Object.values),
-    (data: number[][]) => data.map(Buffer.from),
-    (data: Buffer[]) => data.map(buffer => buffer.toString('base64'))
-  ])(images);
+    (picturesFromClient: PictureStringed[]) => picturesFromClient.map(pic => ({
+      ...pic,
+      image: Object.values(pic.image)
+    })),
+    (picturesFromClient: PictureStringed[]) => picturesFromClient.map(pic => ({
+      ...pic,
+      image: Buffer.from(pic.image)
+    })),
+    (picturesBuffered: PictureBuffered[]) => picturesBuffered.map(pic => ({
+      ...pic,
+      image: pic.image.toString('base64')
+    })),
+    (picturesWithFullPath: PictureStringed[]) => picturesWithFullPath.map(pic => ({
+      ...omit(pic, 'width', 'height'),
+      x: parseInt(pic.width, 10) / 2 - parseInt(pic.x, 10),
+      y: parseInt(pic.height, 10) / 2 - parseInt(pic.y, 10)
+    })),
+    async (picturesBase64: PictureWithProperXY[]) => Promise.all(picturesBase64.map(
+      async (pic, index) => {
+        const fileName = `artboard_${dto.boardId}_${uuid()}_${index}.png`;
+        const fullPath = path.resolve('./tmp', fileName);
+        await fs.outputFile(fullPath, pic.image, 'base64');
+        return {
+          ...omit(pic, 'image'),
+          imagePath: fullPath
+        };
+      }
+    ))
+  )(dto.images);
+}
+
+async function removeImagesFromTmp(pictures: Picture[]): Promise<void> {
+  await Promise.all(
+    pictures.map(async pic => {
+      await fs.remove(pic.imagePath);
+    })
+  );
 }
 
 // TODO: do smth with it

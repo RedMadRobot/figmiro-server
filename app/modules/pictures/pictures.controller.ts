@@ -13,8 +13,8 @@ export const picturesController: Controller = {
     async function processCreateOrUpdatePicture(req: Request, res: Response): Promise<void> {
       try {
         checkUnauthorized(req);
-        await createOrUpdatePictures(req);
-        res.status(OK).send();
+        const widgets = await createOrUpdatePictures(req);
+        res.status(OK).json(widgets);
       } catch (error) {
         processError(error, res);
       }

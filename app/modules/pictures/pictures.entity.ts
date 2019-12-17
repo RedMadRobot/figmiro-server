@@ -12,9 +12,15 @@ export type PictureBuffered = PictureStringed & {
 };
 
 export type PictureStringed = {
+  id: string;
   image: string;
   x: string;
   y: string
   width: string;
   height: string;
+};
+
+export type Widget = {
+  resourceId: string;
+  name: string;
 };

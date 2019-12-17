@@ -5,18 +5,17 @@ import {omit, flow} from 'lodash';
 import FormData from 'form-data';
 import {request} from 'utils/request';
 import {RequestWithBody} from 'utils/RequestWithBody';
-import {CreateOrUpdatePicturesDTO} from './pictures.dto';
-import {PictureStringed, Picture, PictureBuffered, PictureWithProperXY} from './pictures.entity';
+import {CreateOrUpdatePicturesDTO, CreateOrUpdatePicturesResponse} from './pictures.dto';
+import {PictureStringed, Picture, PictureBuffered, PictureWithProperXY, Widget} from './pictures.entity';
 
 export async function createOrUpdatePictures(
   req: RequestWithBody<CreateOrUpdatePicturesDTO>
-): Promise<void> {
+): Promise<Widget[]> {
   const pictures = await getPictures(req.body);
   try {
     const formData = new FormData();
     const data = {
-      data: pictures.map((pic, index) => ({
-        id: createImageId(index),
+      data: pictures.map(pic => ({
         type: 'ImageWidget',
         json: JSON.stringify({
           transformationData: {
@@ -33,7 +32,7 @@ export async function createOrUpdatePictures(
     pictures.forEach(pic => {
       formData.append('ArtboardName1', fs.createReadStream(pic.imagePath));
     });
-    await request.post(
+    const response = await request.post<CreateOrUpdatePicturesResponse>(
       `/boards/${req.body.boardId}/integrations/imageplugin`,
       formData,
       {
@@ -43,8 +42,9 @@ export async function createOrUpdatePictures(
         }
       }
     );
+    return response.data.widgets;
   } catch (error) {
-    console.log(error.response.data.error);
+    throw error.response.data.error;
   } finally {
     await removeImagesFromTmp(pictures);
   }
@@ -90,15 +90,4 @@ async function removeImagesFromTmp(pictures: Picture[]): Promise<void> {
       await fs.remove(pic.imagePath);
     })
   );
-}
-
-// TODO: do smth with it
-function createImageId(index: number): string {
-  const indexString = `${index}`;
-  const MAX_IMAGES = 1000000;
-  const idPart = `${MAX_IMAGES}${indexString}`
-    .split('')
-    .splice(indexString.length)
-    .join('');
-  return `307445734567${idPart}`;
 }

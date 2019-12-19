@@ -1,16 +1,24 @@
 import fs from 'fs-extra';
 import uuid from 'uuid/v1';
 import path from 'path';
+import {INTERNAL_SERVER_ERROR} from 'http-status-codes';
 import {omit, flow} from 'lodash';
 import FormData from 'form-data';
+import {AppError} from 'utils/AppError';
 import {request} from 'utils/request';
 import {RequestWithBody} from 'utils/RequestWithBody';
 import {CreateOrUpdatePicturesDTO, CreateOrUpdatePicturesResponse} from './pictures.dto';
-import {PictureStringed, Picture, PictureBuffered, PictureWithProperXY, Widget} from './pictures.entity';
+import {
+  PictureStringed,
+  Picture,
+  PictureBuffered,
+  PictureWithProperXY,
+  WidgetWithFigmaId
+} from './pictures.entity';
 
 export async function createOrUpdatePictures(
   req: RequestWithBody<CreateOrUpdatePicturesDTO>
-): Promise<Widget[]> {
+): Promise<WidgetWithFigmaId[]> {
   const pictures = await getPictures(req.body);
   try {
     const formData = new FormData();
@@ -42,7 +50,14 @@ export async function createOrUpdatePictures(
         }
       }
     );
-    return response.data.widgets;
+    return response.data.widgets.map(widget => {
+      const founded = pictures.find(picture => widget.name === picture.fileName);
+      if (!founded) throw new AppError('Server error', INTERNAL_SERVER_ERROR);
+      return {
+        ...widget,
+        figmaId: founded.id
+      };
+    });
   } catch (error) {
     throw error.response.data.error;
   } finally {
@@ -77,6 +92,7 @@ async function getPictures(dto: CreateOrUpdatePicturesDTO): Promise<Picture[]> {
         await fs.outputFile(fullPath, pic.image, 'base64');
         return {
           ...omit(pic, 'image'),
+          fileName,
           imagePath: fullPath
         };
       }

@@ -20,7 +20,7 @@ export function processError(error: any, res: Response): void {
   res.status(INTERNAL_SERVER_ERROR).json(appError);
 }
 
-class AppError {
+export class AppError {
   constructor(
     public readonly reason: string,
     public readonly code?: number,

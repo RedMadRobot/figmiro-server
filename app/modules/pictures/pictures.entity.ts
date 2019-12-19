@@ -1,4 +1,5 @@
 export type Picture = Omit<PictureWithProperXY, 'image'> & {
+  fileName: string;
   imagePath: string;
 };
 
@@ -18,6 +19,12 @@ export type PictureStringed = {
   y: string
   width: string;
   height: string;
+};
+
+export type WidgetWithFigmaId = {
+  figmaId: string;
+  resourceId: string;
+  name: string;
 };
 
 export type Widget = {

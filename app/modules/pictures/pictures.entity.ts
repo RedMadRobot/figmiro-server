@@ -19,13 +19,12 @@ export type PictureStringed = {
   y: string
   width: string;
   height: string;
+  resourceId?: string;
 };
 
 export type WidgetWithFigmaId = {
   figmaId: string;
-  resourceId: string;
-  name: string;
-};
+} & Widget;
 
 export type Widget = {
   resourceId: string;

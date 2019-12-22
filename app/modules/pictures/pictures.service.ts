@@ -24,6 +24,7 @@ export async function createOrUpdatePictures(
     const formData = new FormData();
     const data = {
       data: pictures.map(pic => ({
+        ...(pic.resourceId ? {id: pic.resourceId} : {}),
         type: 'ImageWidget',
         json: JSON.stringify({
           transformationData: {
@@ -67,7 +68,6 @@ export async function createOrUpdatePictures(
 
 async function getPictures(dto: CreateOrUpdatePicturesDTO): Promise<Picture[]> {
   return flow(
-    JSON.parse,
     (picturesFromClient: PictureStringed[]) => picturesFromClient.map(pic => ({
       ...pic,
       image: Object.values(pic.image)

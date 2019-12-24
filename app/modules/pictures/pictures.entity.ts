@@ -1,11 +1,6 @@
-export type Picture = Omit<PictureWithProperXY, 'image'> & {
+export type Picture = Omit<PictureStringed, 'image'> & {
   fileName: string;
   imagePath: string;
-};
-
-export type PictureWithProperXY = Omit<PictureStringed, 'width' | 'height'> & {
-  x: number;
-  y: number;
 };
 
 export type PictureBuffered = PictureStringed & {
@@ -15,10 +10,8 @@ export type PictureBuffered = PictureStringed & {
 export type PictureStringed = {
   id: string;
   image: string;
-  x: string;
-  y: string
-  width: string;
-  height: string;
+  x: number;
+  y: number;
   resourceId?: string;
 };
 

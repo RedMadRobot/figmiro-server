@@ -12,7 +12,6 @@ import {
   PictureStringed,
   Picture,
   PictureBuffered,
-  PictureWithProperXY,
   WidgetWithFigmaId
 } from './pictures.entity';
 
@@ -80,12 +79,7 @@ async function getPictures(dto: CreateOrUpdatePicturesDTO): Promise<Picture[]> {
       ...pic,
       image: pic.image.toString('base64')
     })),
-    (picturesBase64: PictureStringed[]) => picturesBase64.map(pic => ({
-      ...omit(pic, 'width', 'height'),
-      x: parseInt(pic.width, 10) / 2 - parseInt(pic.x, 10),
-      y: parseInt(pic.height, 10) / 2 - parseInt(pic.y, 10)
-    })),
-    async (picturesWithProperXY: PictureWithProperXY[]) => Promise.all(picturesWithProperXY.map(
+    async (picturesWithProperXY: PictureStringed[]) => Promise.all(picturesWithProperXY.map(
       async (pic, index) => {
         const fileName = `artboard_${dto.boardId}_${uuid()}_${index}.png`;
         const fullPath = path.resolve('./tmp', fileName);

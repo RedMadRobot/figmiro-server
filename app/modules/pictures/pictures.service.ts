@@ -21,7 +21,7 @@ export async function createOrUpdatePictures(
   const pictures = await getPictures(req.body);
   try {
     const formData = new FormData();
-    const data = {
+    const data = JSON.stringify({
       data: pictures.map(pic => ({
         ...(pic.resourceId ? {id: pic.resourceId} : {}),
         type: 'ImageWidget',
@@ -35,8 +35,8 @@ export async function createOrUpdatePictures(
           }
         })
       }))
-    };
-    formData.append('GraphicsPluginRequest', JSON.stringify(data), {contentType: 'application/json'});
+    });
+    formData.append('GraphicsPluginRequest', data, {contentType: 'application/json'});
     pictures.forEach(pic => {
       formData.append('ArtboardName1', fs.createReadStream(pic.imagePath));
     });
@@ -80,9 +80,9 @@ async function getPictures(dto: CreateOrUpdatePicturesDTO): Promise<Picture[]> {
       image: pic.image.toString('base64')
     })),
     async (picturesWithProperXY: PictureStringed[]) => Promise.all(picturesWithProperXY.map(
-      async (pic, index) => {
-        const fileName = `artboard_${dto.boardId}_${uuid()}_${index}.png`;
-        const fullPath = path.resolve('./tmp', fileName);
+      async pic => {
+        const fileName = `${pic.name}.png`;
+        const fullPath = path.resolve('./tmp', uuid(), fileName);
         await fs.outputFile(fullPath, pic.image, 'base64');
         return {
           ...omit(pic, 'image'),
@@ -97,7 +97,7 @@ async function getPictures(dto: CreateOrUpdatePicturesDTO): Promise<Picture[]> {
 async function removeImagesFromTmp(pictures: Picture[]): Promise<void> {
   await Promise.all(
     pictures.map(async pic => {
-      await fs.remove(pic.imagePath);
+      await fs.remove(path.dirname(pic.imagePath));
     })
   );
 }

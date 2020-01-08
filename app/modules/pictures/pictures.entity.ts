@@ -12,6 +12,7 @@ export type PictureStringed = {
   image: string;
   x: number;
   y: number;
+  name: string,
   resourceId?: string;
 };
 

@@ -2,17 +2,13 @@ import fs from 'fs-extra';
 import uuid from 'uuid/v1';
 import path from 'path';
 import {INTERNAL_SERVER_ERROR} from 'http-status-codes';
-import {omit, flow} from 'lodash';
+import {omit} from 'lodash';
 import FormData from 'form-data';
 import {AppError} from 'utils/AppError';
 import {request} from 'utils/request';
 import {RequestWithBody} from 'utils/RequestWithBody';
 import {CreateOrUpdatePicturesDTO, CreateOrUpdatePicturesResponse} from './pictures.dto';
-import {
-  PictureStringed,
-  Picture,
-  WidgetWithFigmaId, PictureFromClient
-} from './pictures.entity';
+import {Picture, WidgetWithFigmaId} from './pictures.entity';
 
 export async function createOrUpdatePictures(
   req: RequestWithBody<CreateOrUpdatePicturesDTO>
@@ -65,24 +61,19 @@ export async function createOrUpdatePictures(
 }
 
 async function getPictures(dto: CreateOrUpdatePicturesDTO): Promise<Picture[]> {
-  return flow(
-    (picturesFromClient: PictureFromClient[]) => picturesFromClient.map(pic => ({
-      ...pic,
-      image: flow(Object.values, Buffer.from)(pic.image).toString('base64')
-    })),
-    async (picturesWithProperXY: PictureStringed[]) => Promise.all(picturesWithProperXY.map(
-      async pic => {
-        const fileName = `${pic.name}.png`
-        const imagePath = path.resolve('./tmp', uuid(), fileName);
-        await fs.outputFile(imagePath, pic.image, 'base64');
-        return {
-          ...omit(pic, 'image'),
-          fileName,
-          imagePath
-        };
-      }
-    ))
-  )(dto.images);
+  return Promise.all(dto.images.map(
+    async pic => {
+      const fileName = `${pic.name}.png`
+      const imagePath = path.resolve('./tmp', uuid(), fileName);
+      const imageFile = Buffer.from(Object.values(pic.image)).toString('base64');
+      await fs.outputFile(imagePath, imageFile, 'base64');
+      return {
+        ...omit(pic, 'image'),
+        fileName,
+        imagePath
+      };
+    }
+  ));
 }
 
 async function removeImagesFromTmp(pictures: Picture[]): Promise<void> {

@@ -1,8 +1,8 @@
-import {Widget} from './pictures.entity';
+import {Widget, PictureFromClient} from './pictures.entity';
 
 export type CreateOrUpdatePicturesDTO = {
   boardId: string,
-  images: string,
+  images: PictureFromClient[],
   scale: boolean
 };
 

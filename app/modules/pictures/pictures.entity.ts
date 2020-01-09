@@ -1,10 +1,6 @@
-export type Picture = Omit<PictureStringed, 'image'> & {
+export type Picture = Omit<PictureFromClient, 'image'> & {
   fileName: string;
   imagePath: string;
-};
-
-export type PictureStringed = PictureFromClient & {
-  image: string;
 };
 
 export type PictureFromClient = {

@@ -3,16 +3,16 @@ export type Picture = Omit<PictureStringed, 'image'> & {
   imagePath: string;
 };
 
-export type PictureBuffered = PictureStringed & {
-  image: Buffer;
+export type PictureStringed = PictureFromClient & {
+  image: string;
 };
 
-export type PictureStringed = {
+export type PictureFromClient = {
   id: string;
-  image: string;
+  image: Uint8Array;
   x: number;
   y: number;
-  name: string,
+  name: string;
   resourceId?: string;
 };
 

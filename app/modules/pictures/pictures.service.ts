@@ -11,8 +11,7 @@ import {CreateOrUpdatePicturesDTO, CreateOrUpdatePicturesResponse} from './pictu
 import {
   PictureStringed,
   Picture,
-  PictureBuffered,
-  WidgetWithFigmaId
+  WidgetWithFigmaId, PictureFromClient
 } from './pictures.entity';
 
 export async function createOrUpdatePictures(
@@ -67,27 +66,19 @@ export async function createOrUpdatePictures(
 
 async function getPictures(dto: CreateOrUpdatePicturesDTO): Promise<Picture[]> {
   return flow(
-    (picturesFromClient: PictureStringed[]) => picturesFromClient.map(pic => ({
+    (picturesFromClient: PictureFromClient[]) => picturesFromClient.map(pic => ({
       ...pic,
-      image: Object.values(pic.image)
-    })),
-    (picturesFromClient: PictureStringed[]) => picturesFromClient.map(pic => ({
-      ...pic,
-      image: Buffer.from(pic.image)
-    })),
-    (picturesBuffered: PictureBuffered[]) => picturesBuffered.map(pic => ({
-      ...pic,
-      image: pic.image.toString('base64')
+      image: flow(Object.values, Buffer.from)(pic.image).toString('base64')
     })),
     async (picturesWithProperXY: PictureStringed[]) => Promise.all(picturesWithProperXY.map(
       async pic => {
-        const fileName = `${pic.name}.png`;
-        const fullPath = path.resolve('./tmp', uuid(), fileName);
-        await fs.outputFile(fullPath, pic.image, 'base64');
+        const fileName = `${pic.name}.png`
+        const imagePath = path.resolve('./tmp', uuid(), fileName);
+        await fs.outputFile(imagePath, pic.image, 'base64');
         return {
           ...omit(pic, 'image'),
           fileName,
-          imagePath: fullPath
+          imagePath
         };
       }
     ))

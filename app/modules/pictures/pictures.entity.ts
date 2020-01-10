@@ -5,7 +5,6 @@ export type Picture = Omit<PictureFromClient, 'image'> & {
 
 export type PictureFromClient = {
   id: string;
-  image: Uint8Array;
   x: number;
   y: number;
   name: string;

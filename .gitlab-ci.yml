@@ -1,0 +1,28 @@
+variables:
+  REGISTRY: registry.redmadrobot.com:5005
+
+stages:
+  - build
+
+build:dev:
+  image: docker:latest
+  stage: build
+  variables:
+    IMAGE: ${CI_REGISTRY_IMAGE}/app
+  script: >
+    [[ ${CI_COMMIT_REF_SLUG} == "master" ]] && NO_CACHE="--no-cache";
+    docker login -u gitlab-ci-token -p ${CI_BUILD_TOKEN} ${REGISTRY}
+    # do not remove blank line! this is gitlab-ci bug
+
+    docker build -t ${IMAGE}:${CI_COMMIT_REF_SLUG} \
+      $NO_CACHE \
+      --build-arg="PYPI_USER=${PYPI_USER}" \
+      --build-arg="PYPI_PASSWORD=${PYPI_PASSWORD}" \
+      .
+    docker push ${IMAGE}:${CI_COMMIT_REF_SLUG}
+
+    echo ${CI_COMMIT_REF_SLUG} > image-version.txt
+  except:
+    - tags
+  tags:
+    - frontend-docker

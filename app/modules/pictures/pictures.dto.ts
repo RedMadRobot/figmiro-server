@@ -1,9 +1,11 @@
+import {Widget} from './pictures.entity';
+
 export type CreateOrUpdatePicturesDTO = {
   boardId: string,
-  images: string
+  scale: string,
+  imageMeta: string[]
 };
 
-export type CreateOrUpdatePictureDTO = {
-  boardId: string,
-  imagePath: string
+export type CreateOrUpdatePicturesResponse = {
+  widgets: Widget[]
 };

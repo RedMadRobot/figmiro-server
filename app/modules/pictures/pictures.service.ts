@@ -1,72 +1,105 @@
 import fs from 'fs-extra';
+import multer from 'multer';
 import path from 'path';
+import crypto from 'crypto';
+import {INTERNAL_SERVER_ERROR} from 'http-status-codes';
 import FormData from 'form-data';
+import {AppError} from 'utils/AppError';
 import {request} from 'utils/request';
-import {pipe} from 'utils/pipe';
-import {CreateOrUpdatePictureDTO, CreateOrUpdatePicturesDTO} from './pictures.dto';
+import {RequestWithBody} from 'utils/RequestWithBody';
+import {CreateOrUpdatePicturesDTO, CreateOrUpdatePicturesResponse} from './pictures.dto';
+import {Picture, PictureFromClient, WidgetWithFigmaId} from './pictures.entity';
 
-export async function createOrUpdatePictures(dto: CreateOrUpdatePicturesDTO): Promise<void> {
-  const paths = await transformImages(dto.images);
-  await Promise.all(
-    paths.map(
-      imagePath => createOrUpdatePicture({boardId: dto.boardId, imagePath})
-    )
-  );
-}
-
-export async function createOrUpdatePicture(dto: CreateOrUpdatePictureDTO): Promise<void> {
+export async function createOrUpdatePictures(
+  req: RequestWithBody<CreateOrUpdatePicturesDTO>
+): Promise<WidgetWithFigmaId[]> {
+  const pictures = getPictures(req.files as Express.Multer.File[], req.body);
   try {
     const formData = new FormData();
-    const data = {
-      data: [
-        {
-          id: '1234',
-          type: 'ImageWidget',
-          json: '{}'
-        }
-      ]
-    };
-    formData.append('GraphicsPluginRequest', '{"data":[{"id": "3074457345676563085","type": "ImageWidget","json": "{}"}]}', {contentType: 'application/json'});
-    formData.append('ArtboardName1', fs.createReadStream(dto.imagePath));
-    const response = await request.post(
-      `/boards/${dto.boardId}/integrations/imageplugin`,
+    const data = JSON.stringify({
+      data: pictures.map(pic => ({
+        ...(pic.resourceId ? {id: pic.resourceId} : {}),
+        type: 'ImageWidget',
+        json: JSON.stringify({
+          transformationData: {
+            positionData: {
+              x: pic.x,
+              y: pic.y
+            },
+            ...(req.body.scale === 'true' ? {scaleData: {scale: 0.5}} : {})
+          }
+        })
+      }))
+    });
+    formData.append('GraphicsPluginRequest', data, {contentType: 'application/json'});
+    pictures.forEach(pic => {
+      formData.append('ArtboardName1', fs.createReadStream(pic.imagePath));
+    });
+    const response = await request.post<CreateOrUpdatePicturesResponse>(
+      `/boards/${req.body.boardId}/integrations/imageplugin`,
       formData,
       {
-      headers: {
-        Authorization: `hash rCLZjcYe4pKwGqr9wMU0wlRCNf1oLy3f5XfSeNQUElur5E3w1qK9e8oC9lr2ldDE`,
-        ...formData.getHeaders()
+        headers: {
+          Authorization: req.headers.authorization,
+          ...formData.getHeaders()
+        }
       }
+    );
+    return response.data.widgets.map(widget => {
+      const founded = pictures.find(picture => widget.name === picture.fileName);
+      if (!founded) throw new AppError('Server error', INTERNAL_SERVER_ERROR);
+      return {
+        ...widget,
+        figmaId: founded.id
+      };
     });
-    console.log(response);
-  } catch (e) {
-    if (e.response) {
-      console.log(e.response);
-      return;
-    }
-    console.log(e);
+  } catch (error) {
+    throw error.response.data.error;
+  } finally {
+    await removeImagesFromTmp(pictures);
   }
 }
 
-const exportPath = path.resolve();
-async function transformImages(images: string): Promise<string[]> {
-  const base64images = pipe([
-    JSON.parse,
-    (data: object[]) => data.map(Object.values),
-    (data: number[][]) => data.map(Buffer.from),
-    (data: Buffer[]) => data.map(buffer => buffer.toString('base64'))
-  ])(images);
-  return Promise.all(
-    base64images.map(async (image: string, index: number) => {
-      const fullPath = path.resolve('./tmp', `artboard_${index}.png`);
-      await fs.outputFile(fullPath, image, 'base64');
-      return fullPath;
+function getPictures(
+  images: Express.Multer.File[],
+  dto: CreateOrUpdatePicturesDTO
+): Picture[] {
+  return images.map((image, index) => ({
+    ...JSON.parse(dto.imageMeta[index]) as PictureFromClient,
+    fileName: image.filename,
+    imagePath: image.path
+  }));
+}
+
+async function removeImagesFromTmp(pictures: Picture[]): Promise<void> {
+  await Promise.all(
+    pictures.map(async pic => {
+      await fs.remove(pic.imagePath);
     })
   );
 }
 
-// curl -v POST \
-//   --header 'Content-Type: multipart/form-data' \
-//   --header 'Authorization: hash q5HQmoqyRLUiNMOA1gpiEyF1dCZTOS0WM8JLsp45u4hWXFAyd8MRMyGVoMHukeIJ' \
-//   -F 'GraphicsPluginRequest={"data":[{"id": "3074457345676563085","type": "ImageWidget","json": "{}"}]};type=application/json' \
-//   -F 'ArtboardName1=@/Users/i.krupnov/Desktop/WRK/figma2miro-server/tmp/artboard_0.png' \
-//   https://miro.com/api/v1/boards/o9J_kvjP1kA=/integrations/imageplugin
+const TMP_DIR = path.resolve('./tmp');
+export const upload = multer({
+  storage: multer.diskStorage({
+    async destination(
+      _: Express.Request,
+      __: Express.Multer.File,
+      cb: (error: (Error | null), filename: string) => void
+    ): Promise<void> {
+      await fs.ensureDir(TMP_DIR);
+      cb(null, TMP_DIR);
+    },
+    filename(
+      _: Express.Request,
+      file: Express.Multer.File,
+      cb: (error: (Error | null), filename: string) => void
+    ): void {
+      crypto.pseudoRandomBytes(16, (___: Error, raw: Buffer): void => {
+        const extension = path.extname(file.originalname);
+        const filename = path.basename(file.originalname, extension);
+        cb(null, `${filename}__${raw.toString('hex')}__${extension}`);
+      });
+    }
+  })
+});

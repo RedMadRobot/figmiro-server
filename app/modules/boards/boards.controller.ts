@@ -1,6 +1,7 @@
 import {Request, Response, Router} from 'express';
-import {INTERNAL_SERVER_ERROR, OK} from 'http-status-codes';
+import {OK} from 'http-status-codes';
 import {Controller} from 'utils/Controller';
+import {checkUnauthorized, processError} from 'utils/AppError';
 import {getAll} from './boards.service';
 
 export const boardsController: Controller = {
@@ -9,12 +10,13 @@ export const boardsController: Controller = {
     const ctx = Router();
 
     ctx.get('/', findAll);
-    async function findAll(_: Request, res: Response): Promise<void> {
+    async function findAll(req: Request, res: Response): Promise<void> {
       try {
-        const boards = await getAll();
+        checkUnauthorized(req);
+        const boards = await getAll(req);
         res.status(OK).json(boards);
       } catch (error) {
-        res.status(INTERNAL_SERVER_ERROR).json(error);
+        processError(error, res);
       }
     }
 

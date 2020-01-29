@@ -23,7 +23,7 @@
         "no-duplicate-variable": true,
         "no-dynamic-delete": true,
         "no-implicit-dependencies": [false, "dev"],
-        "no-null-keyword": true,
+        "no-null-keyword": false,
         "no-object-literal-type-assertion": true,
         "no-return-await": true,
         "no-sparse-arrays": true,
@@ -65,19 +65,7 @@
         "ordered-imports": false,
         "trailing-comma": [true, {"multiline": "never", "singleline": "never"}],
         "object-literal-sort-keys": false,
-        "variable-name": false,
-        "jsx-alignment": true,
-        "jsx-boolean-value": [true, "never"],
-        "jsx-curly-spacing": [true, "never"],
-        "jsx-equals-spacing": [true, "never"],
-        "jsx-key": true,
-        "jsx-wrap-multiline": false,
-        "jsx-no-multiline-js": false,
-        "jsx-no-bind": true,
-        "jsx-no-lambda": true,
-        "jsx-no-string-ref": true,
-        "jsx-self-close": true,
-        "jsx-space-before-trailing-slash": false
+        "variable-name": false
     },
     "rulesDirectory": []
 }

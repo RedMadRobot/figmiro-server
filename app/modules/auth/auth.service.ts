@@ -1,58 +1,31 @@
+import {Request} from 'express';
 import {request} from 'utils/request';
-import {storage} from 'utils/storage';
-import {CLIENT_SECRET, BASE_URL} from 'config';
-import {AUTH_ROOT} from './auth.meta';
-import {AuthInfo} from './auth.entity';
 import {SignInDTO} from './auth.dto';
 
-type GetAuthInfoResponse = {
-  access_token: string;
-  scope: string;
-  user_id: string;
-  team_id: string;
-  token_type: string;
+type SignInResponse = {
+  token: string;
 };
-export async function getAuthInfoFromAPI(code: string, clientId: string): Promise<AuthInfo> {
+export async function signIn(dto: SignInDTO): Promise<SignInResponse> {
   try {
-    const response = await request.post<GetAuthInfoResponse>(
-      `/oauth/token?grant_type=authorization_code&client_id=${clientId}&client_secret=${CLIENT_SECRET}&code=${code}&redirect_uri=${BASE_URL}${AUTH_ROOT}`
+    const response = await request.post<SignInResponse>('/auth', dto);
+    return response.data;
+  } catch (error) {
+    throw error.response.data.error;
+  }
+}
+
+export async function logout(req: Request): Promise<void> {
+  try {
+    await request.post(
+      '/auth/logout',
+      undefined,
+      {
+        headers: {
+          Authorization: req.headers.authorization
+        }
+      }
     );
-    const {
-      access_token,
-      scope,
-      user_id,
-      team_id,
-      token_type
-    } = response.data;
-    return {
-      accessToken: access_token,
-      scope,
-      userId: user_id,
-      teamId: team_id,
-      tokenType: token_type
-    };
   } catch (error) {
-    throw error.response.data;
+    throw error.response.data.error;
   }
-}
-
-export async function saveAuthInfoToStorage(state: string, authInfo: AuthInfo): Promise<void> {
-  try {
-    await storage.set(state, authInfo);
-  } catch (error) {
-    throw error;
-  }
-}
-
-export async function getAuthInfoFromStorage(state: string): Promise<AuthInfo | undefined> {
-  try {
-    return storage.get<AuthInfo>(state);
-  } catch (error) {
-    throw error;
-  }
-}
-
-export async function signIn(dto: SignInDTO) {
-  const response = await request.post('/auth', dto);
-  console.log(response);
 }

@@ -42,7 +42,7 @@
     "cpy-cli": "^3.0.0",
     "ngrok": "^3.2.5",
     "nodemon": "^2.0.1",
-    "tslint": "^5.20.1",
+    "tslint": "^6.0.0",
     "typescript": "^3.7.2"
   },
   "_moduleAliases": {

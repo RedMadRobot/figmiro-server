@@ -1,5 +1,6 @@
 import fs from 'fs-extra';
 import multer from 'multer';
+import {isArray} from 'lodash';
 import path from 'path';
 import crypto from 'crypto';
 import {INTERNAL_SERVER_ERROR} from 'http-status-codes';
@@ -65,7 +66,7 @@ function getPictures(
   dto: CreateOrUpdatePicturesDTO
 ): Picture[] {
   return images.map((image, index) => ({
-    ...JSON.parse(dto.imageMeta[index]) as PictureFromClient,
+    ...JSON.parse(isArray(dto.imageMeta) ? dto.imageMeta[index] : dto.imageMeta) as PictureFromClient,
     fileName: image.filename,
     imagePath: image.path
   }));

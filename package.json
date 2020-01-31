@@ -4,13 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "npm run clean; tsc; npm run copy-media",
+    "build": "npm run clean; tsc",
     "clean": "rm -rf dist",
     "start": "node dist",
     "dev": "npm run build; concurrently --kill-others \"tsc -w\" \"nodemon dist -e js,pug\"",
     "lint": "tslint -p . -c tslint.json -t stylish",
-    "ngrok": "ngrok http 5000",
-    "copy-media": "cpy app/modules/media/media/**/*.* dist --parents"
+    "ngrok": "ngrok http 5000"
   },
   "author": "RMR MSK",
   "license": "ISC",
@@ -39,7 +38,6 @@
     "@types/multer": "^1.3.10",
     "@types/uuid": "^3.4.6",
     "concurrently": "^5.0.0",
-    "cpy-cli": "^3.0.0",
     "ngrok": "^3.2.5",
     "nodemon": "^2.0.1",
     "tslint": "^6.0.0",

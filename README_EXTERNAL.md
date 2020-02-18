@@ -1,6 +1,6 @@
 #Figmiro server
 
-![Figmiro logo](/images/cover.svg)
+![Figmiro logo](/images/cover.png)
 
 This is proxy server that works with [Miro's](https://miro.com) REST API.
 

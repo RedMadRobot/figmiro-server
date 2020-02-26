@@ -1,7 +1,7 @@
 {
-  "name": "figma2miro-server",
+  "name": "figmiro-server",
   "version": "1.1.1",
-  "description": "",
+  "description": "Figma Integration with Miro (Server)",
   "main": "index.js",
   "scripts": {
     "build": "npm run clean; tsc",
@@ -11,7 +11,7 @@
     "lint": "tslint -p . -c tslint.json -t stylish",
     "ngrok": "ngrok http 5000"
   },
-  "author": "RMR MSK",
+  "author": "Redmadrobot MSK",
   "license": "ISC",
   "dependencies": {
     "axios": "^0.19.0",

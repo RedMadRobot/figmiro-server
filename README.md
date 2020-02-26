@@ -27,10 +27,10 @@ that can be accessed for 8 hours ([ngrok's docs](https://ngrok.com/docs)).
 ![Ngrok https address](/images/ngrok-screen.png)
 
 You need to copy this public https address string and paste it in */app/helpers/request.ts* file
-instead of previous *baseURL* string at [plugin](https://github/smth)
+instead of previous *baseURL* string at [plugin](https://github.com/RedMadRobot/figmiro-plugin)
 
 ![Request file](/images/plugin-file.png)
 
-Then start [plugin](https://github/smth/readme.md) development mode and you ready to go!
+Then start [plugin](https://github.com/RedMadRobot/figmiro-plugin) development mode and you ready to go!
 
 Made by [Redmadrobot](https://www.redmadrobot.com/) 🤖

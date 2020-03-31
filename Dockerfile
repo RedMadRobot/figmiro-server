@@ -2,9 +2,7 @@ FROM node:12
 
 WORKDIR /usr/src/app
 
-RUN rm -rf node_modules && \
-    rm package-lock.json && \
-    npm cache clean --force
+RUN ls -al
 
 COPY package*.json ./
 

@@ -6,8 +6,7 @@ COPY package*.json ./
 
 COPY . .
 
-RUN ls -al && \
-    npm ci && \
+RUN npm ci && \
 	npm run build
 
 EXPOSE 5000

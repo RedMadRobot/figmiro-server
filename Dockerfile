@@ -2,13 +2,12 @@ FROM node:12
 
 WORKDIR /usr/src/app
 
-RUN ls -al
-
 COPY package*.json ./
 
 COPY . .
 
-RUN npm ci && \
+RUN ls -al && \
+    npm ci && \
 	npm run build
 
 EXPOSE 5000

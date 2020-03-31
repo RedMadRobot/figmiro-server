@@ -6,7 +6,8 @@ COPY package*.json ./
 
 COPY . .
 
-RUN npm ci && \
+RUN npm cache clean --force && \
+    npm ci && \
 	npm run build
 
 EXPOSE 5000

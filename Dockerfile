@@ -6,7 +6,8 @@ COPY package*.json ./
 
 COPY . .
 
-RUN npm cache clean --force && \
+RUN rm -rf node_modules && \
+    npm cache clean --force && \
     npm ci && \
 	npm run build
 
